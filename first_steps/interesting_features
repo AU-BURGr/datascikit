@@ -1,0 +1,3 @@
+A few intersting features of this type of data 
+
+1. Time can go over 24:00. This is a result of no date variable. A time stamp over 24:00 indicates that the stop is part of the same trip 

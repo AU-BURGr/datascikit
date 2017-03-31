@@ -2,7 +2,6 @@
 title: 'Data Science: an Omnibus introduction'
 output:
   html_document: default
-  html_notebook: default
 ---
 
 > *Bus*, from the Latin *omnibus*, meaning "to or for, by, with or from everyone"
@@ -37,3 +36,39 @@ We can also use the `zone_id` variable to colour the points, and can make them s
 ```{r}
 plot(stop_lat~stop_lon,data=stops, asp=1/0.89, col=zone_id,pch=19,cex=.5)
 ```
+
+The zones don't match [what you'd expect](https://translink.com.au/tickets-and-fares/fares-and-zones/zones): the colours seem to be reused in each population centre.  Let's try a table
+```{r}
+table(stops$zone_id)
+```
+
+Oh. There are stops on the zone boundaries. The data are more complicated than we expected.
+
+For a simpler map, I'll recode the zones so each stop is listed only in its further-out zone. 
+
+```{r}
+stops$outzone<-factor(c(1,2,2,3,3,4,4,5,5,6,6,7,7,8)[stops$zone_id])
+stops$inzone<-factor(c(1,1,2,2,3,3,4,4,5,5,6,6,7,8)[stops$zone_id])
+plot(stop_lat~stop_lon,data=stops, asp=1/0.89, col=outzone,pch=19,cex=.5)
+```
+
+But it's going to be useful to see where these stops really are: let's try to get them on a street map.  A quick search finds a package called "RgoogleMaps"
+
+```{r}
+library("RgoogleMaps")
+center <- with(stops, c(mean(stop_lat), mean(stop_lon)))
+zoom <- with(stops, min(MaxZoom(range(stop_lat), range(stop_lon))))
+MyMap <- GetMap(center=center, zoom=zoom, destfile = "MyTile1.png")
+tmp <- PlotOnStaticMap(MyMap, lat = stops$stop_lat,lon = stops$stop_lon,destfile = "MyTile1.png", cex=1.5,pch=20,col=palette()[stops$outzone], add=FALSE)
+```
+
+The stops overlay southeast Queensland as we expect, so the data are broadly reasonable
+
+
+Now lets zoom in a bit more, and make the points partially transparent
+```{r}
+MyMap <- GetMap(center=center, zoom=zoom+3, destfile = "MyTile1.png")
+tmp <- PlotOnStaticMap(MyMap, lat = stops$stop_lat,lon = stops$stop_lon,destfile = "MyTile1.png", cex=1.5,pch=20,col=adjustcolor(palette()[stops$outzone],alpha.f=.3), add=FALSE)
+```
+
+The railway stations at the airport and in central Brisbane are in the right places, and the buses follow the roads. The data look basically reasonable and we're happy. 
