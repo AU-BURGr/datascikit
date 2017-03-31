@@ -13,7 +13,7 @@ The reference examples will be transit data, from the Brisbane GTFS feed
 
 ### Extensions 
 
-* A shiny ap
+* A shiny app.
 * Summaries and Comparisons
 * Interface/link to other data sets. 
 * Interace with Internet of Things 
