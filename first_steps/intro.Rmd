@@ -5,7 +5,7 @@ output:
   html_notebook: default
 ---
 
-> *Bus* or *Omnibus*, from the Latin *omnibus*, meaning "to or for, by, with or from everyone"
+> *Bus*, from the Latin *omnibus*, meaning "to or for, by, with or from everyone"
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. Like the other Notebooks in this package, it contains a self-learning data science tutorial. This series of tutorials is based around public transport data.  We will work with data from Southeast Queensland, Australia, but you can probably run many of the the examples on data from your city. 
 
@@ -23,4 +23,17 @@ list.files(staticGTFS)
 ```{r}
 stops<-read.csv(paste(staticGTFS,"stops.txt",sep="/"))
 summary(stops)
+```
+
+We can plot the stops to get the crudest possible map
+```{r}
+plot(stop_lat~stop_lon,data=stops)
+```
+
+This isn't a very good map: the points are ugly, and the aspect ratio is wrong. A unit of longitude is larger than a unit of latitude except at the equator. The scale factor is the cosine of the latitude: in Brisbane, about 0.89
+
+We can also use the `zone_id` variable to colour the points, and can make them smaller.
+
+```{r}
+plot(stop_lat~stop_lon,data=stops, asp=1/0.89, col=zone_id,pch=19,cex=.5)
 ```
