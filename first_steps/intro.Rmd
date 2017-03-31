@@ -1,0 +1,13 @@
+---
+title: "Data Science: an Omnibus introduction"
+output: html_notebook
+---
+
+> *Bus* or *Omnibus*, from the Latin *omnibus*, meaning "to or for, by, with or from everyone"
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. Like the other Notebooks in this package, it contains a self-learning data science tutorial. This series of tutorials is based around public transport data.  We will work with data from Brisbane, Australia, but you can probably run many of the the examples on data from your city. 
+
+
+```{r}
+plot(cars)
+```
