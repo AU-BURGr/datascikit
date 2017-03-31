@@ -4,6 +4,10 @@ author: "Miles McBain"
 date: "31 March 2017"
 output: html_document
 ---
+```{r}
+library(readr)
+library(tidyverse)
+```
 
 
 # Introduction
@@ -11,3 +15,41 @@ output: html_document
 # Reference Data
 https://translink.com.au/about-translink/open-data
 # Learning Outcomes
+
+#Analysis
+
+##Get the data. 
+Assumed Present. Code to add from tslumley.
+
+##Unzip data
+```{r}
+uzip <- utils::unzip("../static_data/SEQ_GTFS.zip")
+```
+
+##Import data we need
+```{r}
+stops <- read_csv("./stops.txt", guess_max = 10000) #a bit hacky
+```
+
+##Find a stop based on a query string
+```{r}
+#' Find a stop
+#' @descrpion Find a stop based on a comma separated qury string of search terms:
+#' eg: "Montague Rd, Kurilpa Street" to match "Montague Rd at Kurilpa Street"
+#' @param stop_names_list a column of stop names
+#' @param query the query string
+#' @example stops %>% filter(find_stop(stop_name,"Montague Rd, Kurilpa Street"))
+
+find_stop <- function(stop_names_list, query){
+    query_pieces <- unlist(strsplit(query, split = "\\s|,"))
+    query_pieces <- example[lapply(example, nchar) != 0] #drop the exmply matches
+    regex_query <- case_when(example == "Rd" | example == "Road" ~ "(Rd|Road)",
+                            example == "St" | example == "Street" ~ "(St|Street)",
+                            example == "Ln" | example == "Lane" ~ "(Ln|Lane)",
+                            TRUE ~ example) %>%
+    paste0(collapse = ".*")
+    grepl(x = stop_names_list, pattern = regex_query)#return the logical vector.
+}
+
+```
+
