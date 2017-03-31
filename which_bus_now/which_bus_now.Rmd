@@ -7,6 +7,7 @@ output: html_document
 ```{r}
 library(readr)
 library(tidyverse)
+library(fields)
 ```
 
 
@@ -51,5 +52,24 @@ find_stop <- function(stop_names_list, query){
     grepl(x = stop_names_list, pattern = regex_query)#return the logical vector.
 }
 
+```
+
+## Find the distance in km between two bus stops
+```{r}
+#' Calcuate a distance
+#' @descrpion Calculate a distance as the crow flies between two bus stops
+#' @param start bust stop as latitude and longitude 
+#' @param stop bust stop as latitude and longitude 
+#' @example distance_between_stops(1330, 1331)
+distance_between_stops <- function(stop1, stop2){
+  p1 <- stops %>%
+    filter(stop_id == stop1) %>%
+    select(stop_lat, stop_lon)
+  p2 <- stops %>%
+    filter(stop_id == stop2) %>%
+    select(stop_lat, stop_lon)
+  
+    return(rdist.earth.vec(p1, p2, miles = FALSE))
+  }
 ```
 
