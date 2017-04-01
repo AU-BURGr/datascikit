@@ -11,3 +11,5 @@ knitr::opts_chunk$set(echo = TRUE)
 It’s Friday afternoon and Giraldo is flying to Brisbane. He an ardent environmentalist and refuses to use taxis.He needs to get to the conference centre where his booked to give a talk on ethical sampling, his plane was delayed on take-off and he is running late.
 
 The simplicity of the Nokia 3310 appealed to Giraldo and on a whim he gave away his iPhone after purchasing the Nokia. Unfortunately, the Nokia 3310 cannot run the Brisbane Translink mobile, cursing Giraldo remembers that wife, Rosemary, had created a Twitter bot application that used an R open data package to tweet public transport information, bless her he thought, did it have Brisbane information he wondered.
+
+Earlier in the year, Rosmary, an R enthuiast and Open Data champion had grown fed up with the 
