@@ -1,0 +1,49 @@
+---
+title: "Interactive bus maps"
+author: "Thomas Lumley"
+date: "31 March 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+An interactive map doesn't fit as well into an Rmd notebook: we'll create an HTML widget instead
+First, we unzip the supplied file into a temporary directory. The temporary direction will be deleted when you quit R.
+```{r}
+staticGTFS<-tempdir()
+unzip("../static_data/SEQ_GTFS.zip",exdir=staticGTFS) #FIXME will use package.file() eventually
+list.files(staticGTFS)
+```
+
+```{r}
+stops<-read.csv(paste(staticGTFS,"stops.txt",sep="/"))
+summary(stops)
+stops$outzone<-factor(c(1,2,2,3,3,4,4,5,5,6,6,7,7,8)[stops$zone_id])
+```
+
+We'll also get a count of buses for each stop can plot the stops to get the crudest possible map. This is fairly slow because there are millions of trip/stop combinations in `stop_times.txt`
+```{r}
+stop_times <- read.csv(paste(staticGTFS,"stop_times.txt",sep="/"))
+trips <- read.csv(paste(staticGTFS,"trips.txt",sep="/"))
+trip_route <- merge(stop_times, trips, by="trip_id")
+bus_count<-with(trip_route,by(trip_id,list(stop=stop_id),length))
+head(bus_count)
+bus_count_df<-data.frame(stop_id=names(bus_count), counts=as.vector(bus_count))
+stops<-merge(stops, bus_count_df,by="stop_id")
+```
+
+Now, there's documentation for the `leaflet` package at [RStudio](https://rstudio.github.io/leaflet/), and we're going to use `htmlwidgets` to save the interactive map in a file.
+
+```{r}
+library(leaflet)
+library(htmlwidgets)
+
+busmap <- leaflet(stops) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(sqrt(counts)),
+                   col=~zone_id)
+saveWidget(busmap, file='/tmp/buses')
+```
+
