@@ -18,20 +18,27 @@ list.files(staticGTFS)
 ```
 
 ```{r}
-stops<-read.csv(paste(staticGTFS,"stops.txt",sep="/"))
+stops<-read.csv(paste(staticGTFS,"stops.txt",sep="/"), stringsAsFactors = FALSE)
 summary(stops)
-stops$outzone<-factor(c(1,2,2,3,3,4,4,5,5,6,6,7,7,8)[stops$zone_id])
+stops$inzone<-as.integer(substr(stops$zone_id,1,1))
 ```
 
-We'll also get a count of buses for each stop can plot the stops to get the crudest possible map. This is fairly slow because there are millions of trip/stop combinations in `stop_times.txt`
+We'll also get a count of buses for each stop can plot the stops to get the crudest possible map. This is fairly slow because there are millions of trip/stop combinations in `stop_times.txt`.  We'll also filter to just the services on 31 March 2017, which was a Friday.
 ```{r}
-stop_times <- read.csv(paste(staticGTFS,"stop_times.txt",sep="/"))
+stop_times <- read.csv(paste(staticGTFS,"stop_times.txt",sep="/"), stringsAsFactors = FALSE)
+today<-20170331
+calendar <- read.csv(paste(staticGTFS,"calendar.txt",sep="/"), stringsAsFactors = FALSE)
+calendar <-subset(calendar, start_date <= today & end_date>=today)
+exceptions<- read.csv(paste(staticGTFS,"calendar_dates.txt",sep="/"), stringsAsFactors = FALSE)
+if (!any(exceptions$date==today)) cat("No exceptions today, fortunately\n")
+services_today<-calendar$service_id[calendar$friday==1]
 trips <- read.csv(paste(staticGTFS,"trips.txt",sep="/"))
+trips<- trips[trips$service_id %in% services_today,]
 trip_route <- merge(stop_times, trips, by="trip_id")
 bus_count<-with(trip_route,by(trip_id,list(stop=stop_id),length))
 head(bus_count)
 bus_count_df<-data.frame(stop_id=names(bus_count), counts=as.vector(bus_count))
-stops<-merge(stops, bus_count_df,by="stop_id")
+fri_stops<-merge(stops, bus_count_df,by="stop_id")
 ```
 
 Now, there's documentation for the `leaflet` package at [RStudio](https://rstudio.github.io/leaflet/), and we're going to use `htmlwidgets` to save the interactive map in a file.
@@ -39,11 +46,56 @@ Now, there's documentation for the `leaflet` package at [RStudio](https://rstudi
 ```{r}
 library(leaflet)
 library(htmlwidgets)
-stops$label<-with(stops, paste(stop_name,counts,paste("stop",stop_id),sep="<br>"))
-busmap <- leaflet(stops) %>%
+fri_stops$label<-with(fri_stops, paste(stop_name,counts,paste("stop",stop_id),sep="<br>"))
+busmap <- leaflet(fri_stops) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
-  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(round(2+sqrt(counts/50))),
-                   col=~I(palette()[outzone]),stroke=FALSE, popup=~label)
+  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(round(2+sqrt(counts/10))),
+                   col=~I(palette()[inzone]),stroke=FALSE, popup=~label)
 saveWidget(busmap, file='/tmp/buses/buses.html',selfcontained=FALSE)
 ```
 
+And, for comparison, Saturday April 1
+
+```{r}
+stop_times <- read.csv(paste(staticGTFS,"stop_times.txt",sep="/"), stringsAsFactors = FALSE)
+tomorrow<-20170401
+calendar <- read.csv(paste(staticGTFS,"calendar.txt",sep="/"), stringsAsFactors = FALSE)
+calendar <-subset(calendar, start_date <= tomorrow & end_date>=tomorrow)
+exceptions<- read.csv(paste(staticGTFS,"calendar_dates.txt",sep="/"), stringsAsFactors = FALSE)
+if (!any(exceptions$date==tomorrow)) cat("No exceptions today, fortunately\n")
+services_today<-calendar$service_id[calendar$saturday==1]
+trips <- read.csv(paste(staticGTFS,"trips.txt",sep="/"))
+trips<- trips[trips$service_id %in% services_today,]
+trip_route <- merge(stop_times, trips, by="trip_id")
+bus_count<-with(trip_route,by(trip_id,list(stop=stop_id),length))
+head(bus_count)
+bus_count_df<-data.frame(stop_id=names(bus_count), counts=as.vector(bus_count))
+sat_stops<-merge(stops, bus_count_df,by="stop_id")
+```
+
+And render in leaflet:
+
+```{r}
+library(leaflet)
+library(htmlwidgets)
+sat_stops$label<-with(sat_stops, paste(stop_name,counts,paste("stop",stop_id),sep="<br>"))
+busmap <- leaflet(sat_stops) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(round(2+sqrt(counts/10))),
+                   col=~I(palette()[inzone]),stroke=FALSE, popup=~label)
+saveWidget(busmap, file='/tmp/buses/buses_saturday.html',selfcontained=FALSE)
+```
+
+And now a direct map of the differences in counts.
+```{r}
+diff_stops<-merge(sat_stops,fri_stops,by="stop_id")
+diff_stops$diff<-with(diff_stops, counts.y-counts.x)
+diff_stops$dlabel<-with(diff_stops, paste(stop_name.x,paste("Sat:",counts.x),paste("Fri:",counts.y),sep="<br>"))
+busmap <- leaflet(diff_stops) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addCircleMarkers(lng=~stop_lon.x,lat=~stop_lat.x, radius=~I(sqrt(abs(diff))),
+                   col=~I(ifelse(diff< 0,"blue","orange")),stroke=FALSE, popup=~dlabel)
+saveWidget(busmap, file='/tmp/buses/buses_diff.html',selfcontained=FALSE)
+```
+
+As we'd expect, the map is mostly orange, with very few stops having more buses on Saturday than Friday. However, a few do, such as "Montague Rd at Davies Park, stop 8", which has a Saturday market. 
