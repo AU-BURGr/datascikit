@@ -39,11 +39,11 @@ Now, there's documentation for the `leaflet` package at [RStudio](https://rstudi
 ```{r}
 library(leaflet)
 library(htmlwidgets)
-
+stops$label<-with(stops, paste(stop_name,counts,sep="<br>"))
 busmap <- leaflet(stops) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
-  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(sqrt(counts)),
-                   col=~zone_id)
-saveWidget(busmap, file='/tmp/buses')
+  addCircleMarkers(lng=~stop_lon,lat=~stop_lat, radius=~I(round(2+sqrt(counts/50))),
+                   col=~I(palette()[outzone]),stroke=FALSE, popup=~label)
+saveWidget(busmap, file='/tmp/buses/buses.html',selfcontained=FALSE)
 ```
 
