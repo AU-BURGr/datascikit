@@ -12,4 +12,8 @@ It’s Friday afternoon and Giraldo is flying to Brisbane. He an ardent environm
 
 The simplicity of the Nokia 3310 appealed to Giraldo and on a whim he gave away his iPhone after purchasing the Nokia. Unfortunately, the Nokia 3310 cannot run the Brisbane Translink mobile, cursing Giraldo remembers that wife, Rosemary, had created a Twitter bot application that used an R open data package to tweet public transport information, bless her he thought, did it have Brisbane information he wondered.
 
-Earlier in the year, Rosmary, an R enthuiast and Open Data champion had grown fed up with the 
+Earlier in the year, Rosmary, an R enthuiast and Open Data champion had decided to create a command line tool that returned public transport information for Brisbane. During a workshop held by her local chapter the group had refined Rosemary's idea. The effort is the code that we will be examining.
+
+Using the datascikit package help Girlado get to his conference.
+Search for the destination;
+````find_stop(destination)````
