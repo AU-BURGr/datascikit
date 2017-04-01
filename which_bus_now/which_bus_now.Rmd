@@ -99,7 +99,7 @@ stop_times <- read_csv("stop_times.txt", guess_max = ,
 #' @descrpion Find the bus need to get to your destination on a weekday
 #' @param dest end of journey as a stip id 
 #' @param arrive_tm as an arival time
-#' @return short name aka bus nbr and route_long_name
+#' @return short name aka bus nbr, route_long_name, longitude and latitute associate with all stops along the route
 #' @example find_a_route_weekday(1880, "16:30:00")
 ```{r}
 find_a_route_weekday <- function(dest, arrive_tm){
@@ -140,6 +140,11 @@ find_journey_stops <- function(trip){
     filter(trip_id == as.character(trip)) %>%
     select(trip_id, stop_id)
   
+# Finding the longitudes and latitudes associated with all stops along a route
+  AA<-stops[match(journey_stops$stop_id, stops$stop_id, nomatch = 0),] %>%     select(stop_id,stop_lat, stop_lon)
+    
+  journey_stops<-cbind(journey_stops,AA)
+
   return(journey_stops)
 }
 ```
