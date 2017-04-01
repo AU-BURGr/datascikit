@@ -68,29 +68,56 @@ stop_times <- read_csv("stop_times.txt", guess_max = ,
                        )
               )
 trips <- read_csv("trips.txt")
+calendar <- read_csv("calendar.txt")
+calendar_dates <- read_csv("calendar_dates.txt")
 
 stop_times <-
     stop_times %>%
     mutate(departure_time = as.duration(hms(departure_time))) #convert them to a duration which we can use in date arithmetic
 
 time_now <- now()
+time_now_int <- as.numeric(strftime(now(), format = "%Y%m%d"))
+day_now <- tolower(wday(lubridate::now(), label = TRUE, abbr = FALSE))
 time_now <- duration(hour(time_now)*60 + minute(time_now), units = "minutes")
+#Tidy the calendar
+tidy_calendar <- gather(calendar, key = "day", value = "day_ind", monday:sunday)
+
+tidy_calendar_dates <-
+    calendar_dates %>%
+    mutate(day = tolower(wday(
+        parse_date_time(date, orders = "%Y%m%d"), label = TRUE, abbr = FALSE)),
+        start_date = date,
+        end_data = date) %>%
+    rename(day_ind = exception_type) %>%
+    select(-date)
+    
+    
+viable_services <-
+    tidy_calendar %>%
+    filter(day == day_now & day_ind == 1) %>%
+    anti_join(
+        tidy_calendar_dates %>% filter(start_date == time_now_int, day_ind == 2),
+        by = c("service_id", "start_date", "day")
+    ) %>% 
+        bind_rows(tidy_calendar_dates %>% filter(start_date == time_now_int, day_ind == 1)
+    )
+viable_trips <- 
+    viable_services %>%
+    left_join(trips)
 
 viable_departures <-     
-    stop_times %>%
+    viable_trips %>%
+    left_join(stop_times) %>%
     mutate(time_until = departure_time - time_now) %>%
-    filter(time_until > as.duration(0)) 
+    filter(time_until > as.duration(0))
 
 #Find scheduled daprting services
 stops %>%
-    filter(find_stop(stop_name, "Griffith University")) %>%
-    left_join(viable_departures, by = "stop_id") %>%
+    filter(find_stop(stop_name, "Jindalee")) %>%
+    left_join(stop_times) %>%
+    inner_join(viable_departures) %>%
     top_n(n = -20, wt = departure_time) %>% 
-    left_join(trips, by = "trip_id") %>%
-    select(stop_name, time_until, route_id, trip_headsign) 
-
-
-
+    select(stop_name, time_until, route_id, trip_headsign)
 
 ```
 
