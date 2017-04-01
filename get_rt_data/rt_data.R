@@ -12,12 +12,13 @@
 # and Fedora/CentOS:
 # protobuf-devel protobuf-compiler are needed
 # 
-
+# https://cran.r-project.org/web/packages/RProtoBuf/index.html
+# https://cran.r-project.org/web/packages/RProtoBuf/vignettes/RProtoBuf-intro.pdf
 install.packages(c("RProtoBuf","RCurl")) # 
 library(RProtoBuf)
 library(RCurl)
 ?RProtoBuf
-vignette( "RProtoBuf", package = "RProtoBuf" )
+# vignette( "RProtoBuf", package = "RProtoBuf" )
 
 
 protofile_url <- "https://developers.google.com/transit/gtfs-realtime/gtfs-realtime.proto"
@@ -30,17 +31,50 @@ if(url.exists(protofile_url)) {
 
 tf <- tempfile("protofile")
 writeLines(protfile,tf)
+
 readProtoFiles( tf )   # dynamiclly compiles the prot format from the temporary file
 ls( "RProtoBuf:DescriptorPool" )  # lists what buffers are possibly available
 
 
+gtfs_rt_feed <- "https://gtfsrt.api.translink.com.au/Feed/SEQ"   # this is the data file on the server
+SEQ_data <- getURLContent(gtfs_rt_feed, binary=T) # this downloads the data file
+tf1 <- tempfile()                                 # Create a temp file to write data to
+writeBin(as.raw(SEQ_data),tf1)                    # write the data to temp file as binary data
+con <- file( tf1, open = "rb" )                   # Create a connection to the binary file on disk
 
-gtfs_rt_feed <- "https://gtfsrt.api.translink.com.au/Feed/SEQ"
-url_con <- url(gtfs_rt_feed)
-readProtoFiles(gtfs_rt_feed)
 
-message <- new( transit_realtime.VehiclePosition )
+message <- read(transit_realtime.VehiclePosition,con)     # Read te protobuf proto file defined data 
+writeLines( transit_realtime.VehiclePosition$toString() ) # describe the data
+writeLines( as.character( message ) )    # print the data
+# (as.character( message ))
+message[[2]]
+list_messages <- as.list(message[[1]])                    # Convert the data to a list
+print(as.character(list_messages))
+sapply( message, function(p) print(p) )
 
-transit_realtime.VehiclePosition$position
+rm(all_messages)
 
-fd <- transit_realtime.VehiclePosition$fileDescriptor()
+message <- read(transit_realtime.VehiclePosition,con)     # Read te protobuf proto file defined data 
+writeLines( transit_realtime.Position$toString() )  # describe the data
+writeLines( as.character( message ) )
+message$fetch("latitude",1)
+str(message)
+str(message)
+has(message, name="latitude")
+writeLines(as.character(message$latitude))
+
+message <- read(transit_realtime.VehiclePosition,con)     # Read te protobuf proto file defined data 
+writeLines( transit_realtime.VehiclePosition$toString() )  # describe the data
+str(message)
+all_messages <- as.list(message)        # Convert the data to a list
+message[["timestamp"]]
+id <- message[[ 1 ]]
+id <- message[[ 2 ]]$latitude
+id <- message[[2]][[ "latitude" ]]
+writeLines(transit_realtime.VehiclePosition$toString())
+writeLines(transit_realtime.Position$toString())
+
+
+close(con)
+
+
