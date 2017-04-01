@@ -96,7 +96,7 @@ stop_times <- read_csv("stop_times.txt", guess_max = ,
 
 ### Find the bus need to get to your destination
 #' Find the bus need to get to your destination on a weekday
-#' @descrpion Calculate a distance as the crow flies between two bus stops
+#' @descrpion Find the bus need to get to your destination on a weekday
 #' @param dest end of journey as a stip id 
 #' @param arrive_tm as an arival time
 #' @return short name aka bus nbr and route_long_name
@@ -123,6 +123,24 @@ find_a_route_weekday <- function(dest, arrive_tm){
     select(route_short_name, route_long_name)
   
   return(journey)
+}
+```
+
+### Find all the stops along a route. Origin and Destination inclusive
+#' Find all the stops along a route. Origin and Destination inclusive
+#' @descrpion Find all the stops along a route. Origin and Destination inclusive
+#' @param dest end of journey as a trip_id 
+#' @return trip_id nbr and stop_id  as adata frame
+#' @example find_journey_stops(bus)
+```{r}
+
+# Find all the stops along a route. Origin and Destination inclusive
+find_journey_stops <- function(trip){
+  journey_stops <- stop_times %>%
+    filter(trip_id == as.character(trip)) %>%
+    select(trip_id, stop_id)
+  
+  return(journey_stops)
 }
 ```
 
