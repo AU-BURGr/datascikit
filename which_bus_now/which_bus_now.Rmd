@@ -55,7 +55,6 @@ find_stop <- function(stop_names_list, query){
 
 ```
 
-<<<<<<< HEAD
 ## Find the distance in km between two bus stops
 ```{r}
 #' Calcuate a distance
@@ -73,7 +72,8 @@ distance_between_stops <- function(stop1, stop2){
   
     return(rdist.earth.vec(p1, p2, miles = FALSE))
   }
-=======
+```
+
 ## Find the next departing service
 ```{r}
 stop_times <- read_csv("stop_times.txt", guess_max = , 
@@ -142,13 +142,13 @@ stops %>%
 ```
 
 ### Find the bus need to get to your destination
+```{r}
 #' Find the bus need to get to your destination on a weekday
 #' @descrpion Find the bus need to get to your destination on a weekday
 #' @param dest end of journey as a stip id 
 #' @param arrive_tm as an arival time
 #' @return short name aka bus nbr, route_long_name, longitude and latitute associate with all stops along the route
 #' @example find_a_route_weekday(1880, "16:30:00")
-```{r}
 find_a_route_weekday <- function(dest, arrive_tm){
   ## Find a route
   # 1. stop_times.txt 
@@ -174,14 +174,13 @@ find_a_route_weekday <- function(dest, arrive_tm){
 ```
 
 ### Find all the stops along a route. Origin and Destination inclusive
+
+```{r}
 #' Find all the stops along a route. Origin and Destination inclusive
 #' @descrpion Find all the stops along a route. Origin and Destination inclusive
 #' @param dest end of journey as a trip_id 
 #' @return trip_id nbr and stop_id  as adata frame
 #' @example find_journey_stops(bus)
-```{r}
-
-# Find all the stops along a route. Origin and Destination inclusive
 find_journey_stops <- function(trip){
   journey_stops <- stop_times %>%
     filter(trip_id == as.character(trip)) %>%
