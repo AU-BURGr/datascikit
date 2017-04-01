@@ -1,0 +1,85 @@
+---
+title: "Exploratory Analysis - Density"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Recall the plot of all the bus stops from the introduction.  First let us read in the bus stops as before.
+
+```{r}
+staticGTFS<-tempdir()
+unzip("../static_data/SEQ_GTFS.zip",exdir=staticGTFS) #FIXME will use package.file() eventually (as with intro)
+stops<-read.csv(paste(staticGTFS,"stops.txt",sep="/"))
+stops$outzone<-factor(c(1,2,2,3,3,4,4,5,5,6,6,7,7,8)[stops$zone_id])
+stops$inzone<-factor(c(1,1,2,2,3,3,4,4,5,5,6,6,7,8)[stops$zone_id])
+plot(stop_lat~stop_lon,data=stops, asp=1/0.89, col=outzone,pch=19,cex=.5)
+```
+
+Say we are interested in looking at a kernel density map of these stops.  A helpful function in R would be the "kde2d()" function from the "MASS" package. To add such a kernel estimate on the RGoogleMap, we first need to use the format of the coordinates from RGoogleMaps and then run the kernel density estimation.  
+
+```{r}
+library(MASS)
+library(RgoogleMaps)
+library(RColorBrewer)
+
+center <- with(stops, c(mean(stop_lat), mean(stop_lon)))
+zoom <- with(stops, min(MaxZoom(range(stop_lat), range(stop_lon))))
+MyMap <- GetMap(center=center, zoom=zoom, destfile = "MyTile1.png")
+
+coords <- LatLon2XY.centered(MyMap, stops$stop_lat, stops$stop_lon, zoom)
+coords <- data.frame(coords)
+k <- kde2d(coords$newX, coords$newY, n=500)
+
+```
+
+Now to add the estimate to the Google map.  We further use a function developed by INSERT NAME HERE (https://www.r-bloggers.com/heatmap-of-toronto-traffic-signals-using-rgooglemaps/) inorder to make the image transparent.  
+
+```{r}
+addalpha <- function(colors, alpha=1.0) {
+  r <- col2rgb(colors, alpha=T)
+  # Apply alpha
+  r[4,] <- alpha*255
+  r <- r/255.0
+  return(rgb(r[1,], r[2,], r[3,], r[4,]))
+}
+
+alpha <- seq.int(0.5, 0.95, length.out=100)
+alpha <- exp(alpha^6-1)
+cols <- rev(colorRampPalette(brewer.pal(8, 'RdYlGn'))(100))
+cols2 <- addalpha(cols, alpha)
+
+PlotOnStaticMap(MyMap)
+image(k, col=cols2, add=T)
+```
+
+Let's zoom into the map a bit more to look at Brisbane central.
+```{r}
+center2 <- with(stops, c(mean(stop_lat), mean(stop_lon)))
+zoom2 <- 11
+MyMap2 <- GetMap(center=center2, zoom=zoom2, destfile = "MyTile2.png")
+PlotOnStaticMap(MyMap2)
+
+coords2 <- LatLon2XY.centered(MyMap2, stops$stop_lat, stops$stop_lon, zoom2)
+coords2 <- data.frame(coords2)
+k2 <- kde2d(coords2$newX, coords2$newY,n=500)
+
+PlotOnStaticMap(MyMap2)
+image(k2, col=cols2, add=T)
+```
+
+
+This seems a bit smooth.  We can also adjust the bandwidth of the estimate to see hot spot (a bit ad hoc, but let's go with it for the moment). 
+
+```{r}
+myBW <- 50
+k3 <- kde2d(coords2$newX, coords2$newY,h=myBW, n=500)
+
+PlotOnStaticMap(MyMap2)
+image(k3, col=cols2, add=T)
+```
+
+
+Try adjusting the bandwidth and see how it changes.  
