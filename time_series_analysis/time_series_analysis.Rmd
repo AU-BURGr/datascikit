@@ -1,0 +1,58 @@
+---
+title: "Time Series Analysis"
+author: "Thiyanga Talagala"
+date: "April 4, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(chron)
+library(dplyr)
+library(ggfortify)
+library(stats)
+library(ggplot2)
+
+# Read data
+stop_time <- read.table("stop_times.txt", sep=",", header=TRUE)
+stoptimeDF <- data.frame(stop_time)
+head(stoptimeDF)
+tail(stoptimeDF)
+
+# order data frame according to the stop_id and arrival_time
+stopTimeDF <- stoptimeDF[with(stoptimeDF, order(stoptimeDF$stop_id, stoptimeDF$arrival_time)), ] 
+head(stopTimeDF)
+
+# extract only the hour of arrival
+
+stopTimeDF$ahour <- format(as.POSIXct(stopTimeDF$arrival_time,format="%H:%M:%S"),"%H")
+stopTimeDF$ahour <- as.numeric(stopTimeDF$ahour)
+
+# in stopTimeDF$ahour incorrectly entered times (eg: 25:00:02) are appeared as NA. Assign correct labels to them
+
+stopTimeDF$ahour[is.na(stopTimeDF$ahour)] <- 24
+freq <- rle(stopTimeDF$ahour)
+count_of_buses <- freq$lengths
+time_hour <- freq$values
+stopID <- stopTimeDF$stop_id[freq$lengths]
+
+
+timeSeriesDF <- data.frame(stopID = stopID, count_of_buses = count_of_buses, time_hour = time_hour)
+head(timeSeriesDF)
+
+stop1 <- filter(timeSeriesDF, stopID==1)
+head(stop1)
+
+# time series plot of hourly counts for stop 1
+autoplot(as.ts(stop1$count_of_buses))
+
+
+
+
+```
+
+
